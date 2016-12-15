@@ -1,1 +1,201 @@
+---
+title: "Practical Machine Learning Course Project"
+author: "Amrit Nath Mishra"
+date: "December 13, 2016"
+output: html_document
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+##Background and Introduction
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it.
+
+In this project, we will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participant They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. The five ways are exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E). Only Class A corresponds to correct performance. The goal of this project is to predict the manner in which they did the exercise, i.e., Class A to E. More information is available from the website here: <http://groupware.les.inf.puc-rio.br/har> (see the section on the Weight Lifting Exercise Dataset).
+
+##Data Processing
+
+For importing data, the following code was used:
+```{R}
+train <- read.csv("pml-training.csv"); test <- read.csv("pml-testing.csv")
+
+```
+The following variables were used in the model as predictors:
+magnet_forearm_y
+magnet_forearm_z
+gyros_forearm_x
+gyros_forearm_y
+gyros_forearm_z
+accel_forearm_x
+accel_forearm_y
+accel_forearm_z
+magnet_forearm_x
+total_accel_forearm
+accel_dumbbell_z
+magnet_dumbbell_x
+magnet_dumbbell_y
+magnet_dumbbell_z
+roll_forearm
+pitch_forearm
+yaw_forearm
+gyros_dumbbell_x
+gyros_dumbbell_y
+gyros_dumbbell_z
+accel_dumbbell_x
+accel_dumbbell_y
+total_accel_dumbbell
+yaw_dumbbell
+roll_dumbbell
+pitch_dumbbell
+accel_arm_z
+magnet_arm_x
+magnet_arm_y
+magnet_arm_z
+gyros_arm_x
+gyros_arm_y
+gyros_arm_z
+accel_arm_x
+accel_arm_y
+magnet_belt_x
+magnet_belt_y
+magnet_belt_z
+roll_arm
+pitch_arm
+yaw_arm
+total_accel_arm
+gyros_belt_x
+gyros_belt_y
+gyros_belt_z
+accel_belt_x
+accel_belt_y
+accel_belt_z
+roll_belt
+pitch_belt
+yaw_belt
+total_accel_belt
+new_window
+num_window
+
+We did not include the remaining variables for predictions as more than 90% values in them were either missing or were NA or Div/0!.
+
+Besides these, we treated the factor variables from the above list as the levels in the test data and the train data did not match and hence, prediction was not possible through this.
+
+```{R}
+levels(test$user_name) = levels(train$user_name)
+levels(test$cvtd_timestamp) = levels(train$cvtd_timestamp)
+levels(test$new_window) = levels(train$new_window)
+levels(test$kurtosis_roll_belt) = levels(train$kurtosis_roll_belt)
+levels(test$kurtosis_picth_belt) = levels(train$kurtosis_picth_belt)
+levels(test$kurtosis_yaw_belt) = levels(train$kurtosis_yaw_belt)
+levels(test$skewness_roll_belt) = levels(train$skewness_roll_belt)
+levels(test$skewness_roll_belt.1) = levels(train$skewness_roll_belt.1)
+levels(test$skewness_yaw_belt) = levels(train$skewness_yaw_belt)
+levels(test$max_yaw_belt) = levels(train$max_yaw_belt)
+levels(test$min_yaw_belt) = levels(train$min_yaw_belt)
+levels(test$amplitude_yaw_belt) = levels(train$amplitude_yaw_belt)
+levels(test$kurtosis_roll_arm) = levels(train$kurtosis_roll_arm)
+levels(test$kurtosis_picth_arm) = levels(train$kurtosis_picth_arm)
+levels(test$kurtosis_yaw_arm) = levels(train$kurtosis_yaw_arm)
+levels(test$skewness_roll_arm) = levels(train$skewness_roll_arm)
+levels(test$skewness_pitch_arm) = levels(train$skewness_pitch_arm)
+levels(test$skewness_yaw_arm) = levels(train$skewness_yaw_arm)
+levels(test$kurtosis_roll_dumbbell) = levels(train$kurtosis_roll_dumbbell)
+levels(test$kurtosis_picth_dumbbell) = levels(train$kurtosis_picth_dumbbell)
+levels(test$kurtosis_yaw_dumbbell) = levels(train$kurtosis_yaw_dumbbell)
+levels(test$skewness_roll_dumbbell) = levels(train$skewness_roll_dumbbell)
+levels(test$skewness_pitch_dumbbell) = levels(train$skewness_pitch_dumbbell)
+levels(test$skewness_yaw_dumbbell) = levels(train$skewness_yaw_dumbbell)
+levels(test$max_yaw_dumbbell) = levels(train$max_yaw_dumbbell)
+levels(test$min_yaw_dumbbell) = levels(train$min_yaw_dumbbell)
+levels(test$amplitude_yaw_dumbbell) = levels(train$amplitude_yaw_dumbbell)
+levels(test$kurtosis_roll_forearm) = levels(train$kurtosis_roll_forearm)
+levels(test$kurtosis_picth_forearm) = levels(train$kurtosis_picth_forearm)
+levels(test$kurtosis_yaw_forearm) = levels(train$kurtosis_yaw_forearm)
+levels(test$skewness_roll_forearm) = levels(train$skewness_roll_forearm)
+levels(test$skewness_pitch_forearm) = levels(train$skewness_pitch_forearm)
+levels(test$skewness_yaw_forearm) = levels(train$skewness_yaw_forearm)
+levels(test$max_yaw_forearm) = levels(train$max_yaw_forearm)
+levels(test$min_yaw_forearm) = levels(train$min_yaw_forearm)
+levels(test$amplitude_yaw_forearm) = levels(train$amplitude_yaw_forearm)
+```
+
+##Modeling 
+#Algorithm Used: Random Forest
+We used random forest algorithm using the randomForest package with 50 trees.
+
+```{R}
+library(randomForest)
+modrf <- randomForest(classe~magnet_forearm_y+
+                         magnet_forearm_z+
+                         gyros_forearm_x+
+                         gyros_forearm_y+
+                         gyros_forearm_z+
+                         accel_forearm_x+
+                         accel_forearm_y+
+                         accel_forearm_z+
+                         magnet_forearm_x+
+                         total_accel_forearm+
+                         accel_dumbbell_z+
+                         magnet_dumbbell_x+
+                         magnet_dumbbell_y+
+                         magnet_dumbbell_z+
+                         roll_forearm+
+                         pitch_forearm+
+                         yaw_forearm+
+                         gyros_dumbbell_x+
+                         gyros_dumbbell_y+
+                         gyros_dumbbell_z+
+                         accel_dumbbell_x+
+                         accel_dumbbell_y+
+                         total_accel_dumbbell+
+                         yaw_dumbbell+
+                         roll_dumbbell+
+                         pitch_dumbbell+
+                         accel_arm_z+
+                         magnet_arm_x+
+                         magnet_arm_y+
+                         magnet_arm_z+
+                         gyros_arm_x+
+                         gyros_arm_y+
+                         gyros_arm_z+
+                         accel_arm_x+
+                         accel_arm_y+
+                         magnet_belt_x+
+                         magnet_belt_y+
+                         magnet_belt_z+
+                         roll_arm+
+                         pitch_arm+
+                         yaw_arm+
+                         total_accel_arm+
+                         gyros_belt_x+
+                         gyros_belt_y+
+                         gyros_belt_z+
+                         accel_belt_x+
+                         accel_belt_y+
+                         accel_belt_z+
+                         roll_belt+
+                         pitch_belt+
+                         yaw_belt+
+                         total_accel_belt+
+                         new_window+
+                         num_window, data = train, ntrees = 50)
+ 
+```
+And then, predicted the test cases using the following the code:
+
+```{R}
+ pred = predict(modrf, test)
+ pred
+```
+
+#Summary and Conclusion
+
+The final predictions for the test cases came out to be:
+
+```{R echo = FALSE}
+pred
+```
+We did try the predictions on the quiz and the results were true. Hence, random forest predicts how correctly an exercise is performed quite well.
